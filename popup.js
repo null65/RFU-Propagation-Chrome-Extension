@@ -1,4 +1,6 @@
 const API = 'https://radioforus.co.uk/api/propagation-summary.php';
+const FETCH_TIMEOUT_MS = 8000;
+const AUTO_REFRESH_MS = 10 * 60 * 1000;
 
 let lastData = null;
 let favorites = { hf: [], vhf: [] };
@@ -308,25 +310,61 @@ function loadFromCache(cb) {
   });
 }
 
-function fetchLive() {
-  return fetch(API, { cache: 'no-store' }).then(function (r) {
-    return r.json();
-  });
+function cacheIsStale() {
+  if (!fetchedAtMs) return true;
+  return Date.now() - fetchedAtMs > AUTO_REFRESH_MS;
 }
 
-function refresh() {
-  document.getElementById('updated').textContent = 'Refreshing…';
-  fetchLive()
+function fetchLive() {
+  const ctrl = new AbortController();
+  const timer = setTimeout(function () {
+    ctrl.abort();
+  }, FETCH_TIMEOUT_MS);
+  return fetch(API, { cache: 'no-store', signal: ctrl.signal })
+    .then(function (r) {
+      if (!r.ok) throw new Error('bad response');
+      return r.json();
+    })
+    .finally(function () {
+      clearTimeout(timer);
+    });
+}
+
+function saveSummary(data) {
+  fetchedAtMs = Date.now();
+  chrome.storage.local.set({
+    propSummary: data,
+    propFetchedAt: fetchedAtMs
+  });
+  chrome.runtime.sendMessage({ type: 'summary', payload: data }).catch(function () {});
+}
+
+function refresh(opts) {
+  opts = opts || {};
+  const force = !!opts.force;
+  const hadData = !!lastData;
+
+  if (force) {
+    document.getElementById('updated').textContent = 'Refreshing…';
+  } else if (!hadData) {
+    document.getElementById('updated').textContent = 'Loading…';
+  }
+
+  return fetchLive()
     .then(function (data) {
-      fetchedAtMs = Date.now();
       render(data);
-      chrome.storage.local.set({
-        propSummary: data,
-        propFetchedAt: fetchedAtMs
-      });
-      chrome.runtime.sendMessage({ type: 'summary', payload: data }).catch(function () {});
+      saveSummary(data);
+      if (data.ok) {
+        document.getElementById('err').hidden = true;
+      }
     })
     .catch(function () {
+      if (hadData && lastData) {
+        document.getElementById('updated').textContent = fmtUpdated(lastData.updated);
+        document.getElementById('err').hidden = false;
+        document.getElementById('err').textContent = 'Could not refresh — showing saved data.';
+        return;
+      }
       loadFromCache(function (cached) {
         if (cached) {
           render(cached);
@@ -381,9 +419,15 @@ function initSettings() {
       if (staleSel) staleSel.value = String(staleHours);
       applyCallsignLinks();
       renderFavList();
-      if (res.propSummary) render(res.propSummary);
+      if (res.propSummary) {
+        render(res.propSummary);
+      } else {
+        document.getElementById('updated').textContent = 'Loading…';
+      }
       if (res.activeTab) switchTab(res.activeTab);
-      refresh();
+      if (!res.propSummary || cacheIsStale()) {
+        refresh();
+      }
     }
   );
 }
@@ -421,7 +465,9 @@ document.getElementById('btn-clear-favs').addEventListener('click', function () 
   renderFavList();
 });
 
-document.getElementById('btn-refresh-top').addEventListener('click', refresh);
+document.getElementById('btn-refresh-top').addEventListener('click', function () {
+  refresh({ force: true });
+});
 
 document.getElementById('callsign').addEventListener('input', applyCallsignLinks);
 

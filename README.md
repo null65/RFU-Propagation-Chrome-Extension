@@ -48,4 +48,4 @@ Distribution for most users will be via the Chrome Web Store once published. Git
 
 ## Licence
 
-Contributions are reviewed by the RadioForUs maintainers. Licence for the project will be stated in the root repository; contact the team if unsure before reusing code elsewhere.
+MIT — see [LICENSE](LICENSE). The RadioForUs name and logo are project branding; do not imply official endorsement without permission.
