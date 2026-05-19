@@ -1,4 +1,6 @@
 const API = 'https://radioforus.co.uk/api/propagation-summary.php';
+const FETCH_TIMEOUT_MS = 8000;
+const MIN_PULL_MS = 5 * 60 * 1000;
 
 function badgeFromSummary(data) {
   if (!data || !data.ok || !Array.isArray(data.hf)) {
@@ -22,27 +24,59 @@ function applyBadge(data) {
   chrome.action.setBadgeBackgroundColor({ color: b.color });
 }
 
-function pull() {
-  return fetch(API, { cache: 'no-store' })
-    .then(function (r) { return r.json(); })
-    .then(function (data) {
-      chrome.storage.local.set({ propSummary: data, propFetchedAt: Date.now() });
-      applyBadge(data);
-      return data;
+function fetchLive() {
+  const ctrl = new AbortController();
+  const timer = setTimeout(function () {
+    ctrl.abort();
+  }, FETCH_TIMEOUT_MS);
+  return fetch(API, { cache: 'no-store', signal: ctrl.signal })
+    .then(function (r) {
+      if (!r.ok) throw new Error('bad response');
+      return r.json();
     })
-    .catch(function () {
-      chrome.action.setBadgeText({ text: '?' });
-      chrome.action.setBadgeBackgroundColor({ color: '#64748b' });
+    .finally(function () {
+      clearTimeout(timer);
     });
+}
+
+function pull(force) {
+  return new Promise(function (resolve) {
+    chrome.storage.local.get(['propSummary', 'propFetchedAt'], function (res) {
+      const last = res.propFetchedAt || 0;
+      const cached = res.propSummary || null;
+      if (!force && cached && Date.now() - last < MIN_PULL_MS) {
+        applyBadge(cached);
+        resolve(cached);
+        return;
+      }
+      fetchLive()
+        .then(function (data) {
+          const at = Date.now();
+          chrome.storage.local.set({ propSummary: data, propFetchedAt: at });
+          applyBadge(data);
+          resolve(data);
+        })
+        .catch(function () {
+          if (cached) {
+            applyBadge(cached);
+            resolve(cached);
+          } else {
+            chrome.action.setBadgeText({ text: '?' });
+            chrome.action.setBadgeBackgroundColor({ color: '#64748b' });
+            resolve(null);
+          }
+        });
+    });
+  });
 }
 
 chrome.runtime.onInstalled.addListener(function () {
   chrome.alarms.create('propRefresh', { periodInMinutes: 60 });
-  pull();
+  pull(true);
 });
 
 chrome.alarms.onAlarm.addListener(function (alarm) {
-  if (alarm.name === 'propRefresh') pull();
+  if (alarm.name === 'propRefresh') pull(true);
 });
 
 chrome.runtime.onMessage.addListener(function (msg, _sender, sendResponse) {
@@ -53,4 +87,4 @@ chrome.runtime.onMessage.addListener(function (msg, _sender, sendResponse) {
   return false;
 });
 
-pull();
+pull(false);

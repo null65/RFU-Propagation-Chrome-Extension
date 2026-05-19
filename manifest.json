@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "RadioForUs Propagation",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "UK HF and VHF propagation at a glance from RadioForUs.co.uk.",
   "icons": {
     "16": "icons/icon16.png",
