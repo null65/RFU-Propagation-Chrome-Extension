@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "RadioForUs Propagation",
+  "version": "1.2.1",
+  "description": "UK HF and VHF propagation at a glance from RadioForUs.co.uk.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "RadioForUs propagation",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "permissions": ["storage", "alarms"],
+  "host_permissions": [
+    "https://radioforus.co.uk/*"
+  ],
+  "background": {
+    "service_worker": "service_worker.js"
+  }
+}

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RadioForUs</title>
+  <link rel="stylesheet" href="popup.css">
+  <script src="theme-boot.js"></script>
+</head>
+<body>
+  <header class="top">
+    <img src="https://radioforus.co.uk/rfu.png" width="32" height="32" alt="">
+    <div class="brand">
+      <strong>RadioForUs</strong>
+      <span id="updated">Loading…</span>
+    </div>
+    <button type="button" class="refresh-mini" id="btn-refresh-top" title="Refresh data" aria-label="Refresh">↻</button>
+  </header>
+  <div class="tabs-wrap">
+    <nav class="tabs" role="tablist">
+      <button type="button" class="tab active" role="tab" id="tab-bands" aria-selected="true" aria-controls="panel-bands" data-panel="panel-bands">Bands</button>
+      <button type="button" class="tab" role="tab" id="tab-links" aria-selected="false" aria-controls="panel-links" data-panel="panel-links">Links</button>
+      <button type="button" class="tab" role="tab" id="tab-settings" aria-selected="false" aria-controls="panel-settings" data-panel="panel-settings">Settings</button>
+    </nav>
+  </div>
+  <main class="main">
+    <section id="panel-bands" class="panel active" role="tabpanel" aria-labelledby="tab-bands">
+      <p class="stale" id="stale-warn" hidden>Data may be out of date — refresh when you can.</p>
+      <div class="bands-block">
+        <div class="section-head">
+          <h2>HF</h2>
+          <button type="button" class="text-btn" id="btn-show-all" hidden>Show all</button>
+        </div>
+        <div class="band-cols">
+          <span class="band-cols-gap"></span>
+          <span class="band-cols-name">Band</span>
+          <span class="band-cols-pill" title="Day">D</span>
+          <span class="band-cols-pill" title="Night">N</span>
+        </div>
+        <div id="hf-list" class="band-list"></div>
+      </div>
+      <div class="bands-block">
+        <div class="section-head">
+          <h2>VHF / UHF</h2>
+        </div>
+        <div class="band-cols">
+          <span class="band-cols-gap"></span>
+          <span class="band-cols-name">Band</span>
+          <span class="band-cols-pill" title="Day">D</span>
+          <span class="band-cols-pill" title="Night">N</span>
+        </div>
+        <div id="vhf-list" class="band-list"></div>
+      </div>
+      <p class="err" id="err" hidden></p>
+    </section>
+    <section id="panel-links" class="panel" role="tabpanel" aria-labelledby="tab-links" hidden>
+      <p class="panel-lead">Handy shack links — opens in a new tab.</p>
+      <div class="link-grid">
+        <a class="link-card" id="link-psk-map" href="https://pskreporter.info/pskmap.html" target="_blank" rel="noopener noreferrer">PSK Reporter map</a>
+        <a class="link-card" href="https://pskreporter.info/" target="_blank" rel="noopener noreferrer">PSK Reporter</a>
+        <a class="link-card" id="link-psk-call" href="https://pskreporter.info/pskmap.html" target="_blank" rel="noopener noreferrer" hidden>PSK map (your call)</a>
+        <a class="link-card" href="https://reversebeacon.net/" target="_blank" rel="noopener noreferrer">Reverse Beacon</a>
+        <a class="link-card" href="https://www.dxsummit.fi/" target="_blank" rel="noopener noreferrer">DX Summit</a>
+        <a class="link-card" href="http://www.hamqsl.com/solar.html" target="_blank" rel="noopener noreferrer">HamQSL solar</a>
+        <a class="link-card" id="link-dash-menu" href="https://radioforus.co.uk/propagation/index.php" target="_blank" rel="noopener noreferrer">RFU propagation</a>
+        <a class="link-card" href="https://radioforus.co.uk/" target="_blank" rel="noopener noreferrer">RadioForUs home</a>
+      </div>
+    </section>
+    <section id="panel-settings" class="panel" role="tabpanel" aria-labelledby="tab-settings" hidden>
+      <div class="settings-group">
+        <h3>Appearance</h3>
+        <label class="setting-row">
+          <span>Theme</span>
+          <select id="setting-theme">
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+          </select>
+        </label>
+      </div>
+      <div class="settings-group">
+        <h3>Shack</h3>
+        <label class="setting-row">
+          <span>Callsign</span>
+          <input type="text" id="callsign" maxlength="12" autocomplete="off" spellcheck="false" placeholder="M0ABC">
+        </label>
+        <label class="setting-row">
+          <span>Stale warning after</span>
+          <select id="setting-stale-hours">
+            <option value="3">3 hours</option>
+            <option value="6" selected>6 hours</option>
+            <option value="12">12 hours</option>
+            <option value="24">24 hours</option>
+          </select>
+        </label>
+      </div>
+      <div class="settings-group">
+        <h3>Favourites</h3>
+        <p class="setting-hint">Star any HF or VHF/UHF row on the Bands tab. Favourite as many as you like.</p>
+        <ul id="fav-list" class="fav-list"></ul>
+        <button type="button" class="btn-muted" id="btn-clear-favs">Clear all favourites</button>
+      </div>
+    </section>
+  </main>
+  <p class="credit">Built by <a href="https://jackbrown.xyz/" target="_blank" rel="noopener noreferrer">Jack Brown</a> for <a href="https://radioforus.co.uk/" target="_blank" rel="noopener noreferrer">RadioForUs</a></p>
+  <footer class="foot">
+    <a id="link-dash" href="https://radioforus.co.uk/propagation/index.php" target="_blank" rel="noopener">Dashboard</a>
+    <a id="link-site" class="secondary" href="https://radioforus.co.uk/" target="_blank" rel="noopener">Site</a>
+  </footer>
+  <script src="popup.js"></script>
+</body>
+</html>
